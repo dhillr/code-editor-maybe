@@ -25,7 +25,7 @@ copy these commands:
 
 ```bash
 cd ../mnt/chromeos/MyFiles/Downloads
-cd code-editor-maybe-main # or whatever you have it named
+cd code-editor-maybe-master # or whatever you have it named
 python3 editor.py
 ```
 > [!WARNING]
