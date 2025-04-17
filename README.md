@@ -29,6 +29,7 @@ cd code-editor-maybe # or whatever you have it named
 python3 editor.py
 ```
 > ![WARNING]
+
 > this will **NOT** work if you don't share your file with linux
 
 and you just ran the editor!!!!1!1!11!11!
