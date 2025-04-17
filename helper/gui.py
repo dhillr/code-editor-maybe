@@ -101,7 +101,7 @@ class Element:
     def on_click(self): ...
 
 class RightClickMenu:
-    def __init__(self, options, pos=(0, 0), w=200):
+    def __init__(self, options, pos=(0, 0), w=200, destroyer=None):
         self.options = options
         self.option_list = []
 
@@ -111,26 +111,30 @@ class RightClickMenu:
         self.x = pos[0]
         self.y = pos[1]
         self.w = w
+        self.destroyer = destroyer
 
     def draw(self, surface: Surface, font: pygame.font.Font):
-        r = (self.x, self.y, self.w + 8 * zero(self.max_len - 15), 20 + 25 * len(self.option_list) + 5 * len(self.options))
+        self.rw = self.w + 8 * zero(self.max_len - 15)
+        r = (self.x, self.y, self.rw, 20 + 25 * len(self.option_list) + 5 * len(self.options))
         rect(surface, (35, 35, 35), r, border_radius=5)
         rect(surface, (63, 63, 63), r, width=1, border_radius=5)
 
         offset = 0
         padding = 0
-
-        mouse_pos = pygame.mouse.get_pos()
-        for i, option in enumerate(self.option_list):
-            option_rect = pygame.Rect(self.x, self.y + 7 + 25 * i + padding, self.w, 25)
-            if option_rect.collidepoint(mouse_pos):
-                rect(surface, (255, 63, 127), (option_rect[0] + 5, option_rect[1], option_rect[2] - 10, option_rect[3]), border_radius=5)
-                if pygame.mouse.get_pressed()[0]:
-                    self.on_option_click(option)
         
         for group in self.options:
-            for i, option in enumerate(group):
+            for i, option in enumerate(group): 
+                mouse_pos = pygame.mouse.get_pos()
+                option_rect = pygame.Rect(self.x, self.y + 7 + 25 * (i + offset) + padding, self.rw, 25)
+                if option_rect.collidepoint(mouse_pos):
+                    rect(surface, (255, 63, 127), (option_rect[0] + 5, option_rect[1], option_rect[2] - 10, option_rect[3]), border_radius=5)
+                    if pygame.mouse.get_pressed()[0]:
+                        self.on_option_click(option)
                 surface.blit(font.render(option, True, (255, 255, 255)), (self.x + 15, self.y + 5 + padding + 25 * (i + offset)))
             offset += len(group)
             padding += 10
             if group != self.options[len(self.options)-1]: rect(surface, (63, 63, 63), (self.x, self.y + 10 + 25 * offset + (padding - 10), self.w + 8 * zero(self.max_len - 15), 2))
+
+        mouse_pos = pygame.mouse.get_pos()
+        if not pygame.Rect(*r).collidepoint(mouse_pos):
+            if pygame.mouse.get_pressed()[0] or pygame.mouse.get_pressed()[1] or pygame.mouse.get_pressed()[2]: self.destroyer()

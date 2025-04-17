@@ -10,6 +10,8 @@ class Explorer(DraggableWidget):
 
     def on_option_click(self, option): print(option)
 
+    def destroy_menu(self): self.menu = None
+
     def draw(self, surface, font):
         super().draw(surface)
         draw.rect(surface, (40, 40, 40), (self.x, self.y, self.w, self.h))
@@ -22,10 +24,10 @@ class Explorer(DraggableWidget):
                     ["New File...", "New Folder..."],
                     ["Copy Path"],
                     ["Other Stuff...", "Other Other Stuff...", "idk man", "code! :D"]
-                ], pos=mouse_pos)
+                ], pos=mouse_pos, destroyer=self.destroy_menu)
         if self.menu: 
-            self.menu.draw(surface, font)
             self.menu.on_option_click = self.on_option_click
+            self.menu.draw(surface, font)         
 
 class ExplorerItem(Element):
     def __init__(self, height, text, parent: Widget=None):

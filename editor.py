@@ -9,6 +9,7 @@ import os
 import subprocess
 import json
 import time
+import re
 import gui.widgets as widgets
 import gui.explorer as gui_explorer
 from tkinter import messagebox
@@ -30,6 +31,10 @@ def restore():
 
 def save():
     open(files["active"], "w").write(code)
+
+def set_index_in_str(str, index, val):
+    return str[0:index]+val+str[index+1:len(str)]
+
 
 pygame.init()
 screen: pygame.Surface = pygame.display.set_mode((1280, 720), pygame.RESIZABLE)
@@ -61,8 +66,10 @@ start_time = time.time()
 typing = False
 since_key_press = 0
 keycombo = []
+output = None
 
 cursor_pos = [-1, -1] # [row, column] (-1 = last letter/line)
+scroll = 0
 
 explorer = widgets.Explorer().set_padding(10, 0)
 items = gui_explorer.explorer_tab(explorer)
@@ -109,7 +116,8 @@ while True:
                 save()
             elif keycombo == [pygame.K_LCTRL, pygame.K_m]:
                 if platform == "win32":
-                    subprocess.Popen(['python', files["active"]])
+                    output = subprocess.Popen(['python', files["active"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    
                 else:
                     os.system(f'python3 "{files["active"]}"')
             elif keycombo == [pygame.K_LCTRL, pygame.K_LSHIFT, pygame.K_p]:
@@ -143,10 +151,16 @@ while True:
                         lines = code.split("\n")
                         lines[cursor_pos[1]] = lines[cursor_pos[1]][0:len(lines[cursor_pos[1]])-1]
                         new_line = -1
-                        if (lines[cursor_pos[1]] == ""): new_line = cursor_pos[1]
+                        
                         code = ""
                         for i, line in enumerate(lines):
                             code += line + ("\n" if i < len(lines)-1 or i == new_line else "")
+
+                        if (lines[cursor_pos[1]] == ""):
+                            newline_index = list(re.finditer(re.escape("\n"), code))[cursor_pos[1]].start()
+                            code = set_index_in_str(code, newline_index, "")
+                            new_line = cursor_pos[1]
+                            cursor_pos[1] -= 1
                     else:
                         lines = code.split("\n")
                         lines[cursor_pos[1]] = lines[cursor_pos[1]][0:cursor_pos[0]] + lines[cursor_pos[1]][cursor_pos[0]+1:len(lines[cursor_pos[1]])]
@@ -197,6 +211,10 @@ while True:
         if event.type == pygame.KEYUP:
             keycombo.remove(event.key)
 
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 4 and scroll >= 0: scroll -= 30
+            if event.button == 5: scroll += 30
+
     events = open("./local/event.dat").read()
     if events[0] == "1":
         open("local/files.json", "w").write(json.dumps({
@@ -215,11 +233,12 @@ while True:
     line_num = len(code.split("\n"))
     offset = 20 * (floor(log10(line_num)-2) if floor(log10(line_num)-2) > -1 else 0)
     for i, line in enumerate(code.split("\n")):
+        # if i > 35: break
         line_num = i+1
         txt = font.render(str(line_num), True, (255, 255, 255) if get_cursor_line(cursor_pos[1], code)==i else (100, 100, 100))
-        rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i))
+        rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
         screen.blit(txt, rect)
-        screen.blit(font.render(line.replace("\t", "    "), True, (255, 255, 255)), (explorer._w + 70, 20+20*i))
+        screen.blit(font.render(line.replace("\t", "    "), True, (255, 255, 255)), (explorer._w + 70, 20+20*i-scroll))
 
     cursor_line = get_cursor_line(cursor_pos[1], code)
     line = code.split("\n")[cursor_line]
@@ -227,13 +246,16 @@ while True:
     screen.blit(
         font.render(" "*(get_cursor_char(cursor_pos[0], line.replace("\t", "    ")) + 1 + tab_offset)+"|", 
                     True, (127, 127, 127)
-    ), (explorer._w + 65, 20+20*cursor_line))
+    ), (explorer._w + 65, 20+20*cursor_line-scroll))
 
     explorer.draw(screen, alt_font)
     for item in items: item.draw(screen, alt_font)
 
     elapsed_ms = 1000 * (time.time() - start_time)
-
+    
+    # if output:
+    #     stdout, stderr = output.communicate()
+    #     print(stdout)
     clock.tick(100000)
-    # print(clock.get_fps())
+    pygame.display.set_caption(f"Code Editor - FPS: {clock.get_fps():.2f} ({'Great' if clock.get_fps() >= 1000 else ('Good' if clock.get_fps() >= 800 else ('Okay' if clock.get_fps() >= 500 else 'Slow'))})")
     pygame.display.flip()
