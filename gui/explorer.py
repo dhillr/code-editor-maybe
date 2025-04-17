@@ -8,7 +8,7 @@ def first_file(folder):
         if path.isfile(path.join(folder, f)): return f
 
 clicked_item: str = ""
-open("./local/event.dat", "w").write("0")
+open("./local/event.dat", "w").write("\0")
 
 def set_active(val):
     global clicked_item
@@ -30,15 +30,20 @@ def explorer_tab(parent):
             }, indent=4))
             set_active(json["active_folder"] + "/" + self.text)
             # active = open(json["active_folder"] + "/" + self.text).read()
-            open("./local/event.dat", "w").write("1")
+            open("./local/event.dat", "w").write("\u0001")
 
-        if isinstance(item, FileElement):
-            item.on_click = file_event
-        else:
-            item.on_click = lambda self: open("./local/files.json", "w").write(dumps({
+        def folder_event(self):
+            open("./local/event.dat", "w").write(f"\u0002{self.index}")
+            open("./local/files.json", "w").write(dumps({
                 "active_folder": json["active_folder"]+"/"+self.text,
                 "active": json["active_folder"]+"/"+self.text+"/"+first_file(json["active_folder"]+"/"+self.text),
                 "recent": json["recent"]
             }, indent=4))
+
+        if isinstance(item, FileElement):
+            item.on_click = file_event
+        else:
+            item.index = i
+            item.on_click = folder_event
 
     return res

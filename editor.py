@@ -14,6 +14,7 @@ import gui.widgets as widgets
 import gui.explorer as gui_explorer
 from tkinter import messagebox
 from helper import filehelper
+from gui import widgets
 from sys import platform
 from math import log10, floor
 
@@ -25,8 +26,8 @@ def get_cursor_char(p, t):
     if p == -1: return len(t)-1
     return p
 
-def restore():
-    messagebox.showerror("Error", "An error occured while trying to load your last file.\nTo prevent more errors, we reset:\n- Your active folder cache\n- Your active file cache\n- Your recent folder cache")
+def restore(additional_data=""):
+    messagebox.showerror("Error", "An error occured while trying to load your last file.\nTo prevent more errors, we reset:\n- Your active folder cache\n- Your active file cache\n- Your recent folder cache\n\nError: " + additional_data)
     open("local/files.json", "w").write('{\n\t"active_folder": "",\n\t"active": "",\n\t"recent": []\n}')
 
 def save():
@@ -57,7 +58,19 @@ if files["active_folder"] == "":
     }))
     files = json.loads(open("local/files.json").read())
 
-active = "" if not files["active"] else open(files["active"]).read()
+active = ""
+try:
+    active = "" if not files["active"] else open(files["active"]).read()
+except Exception as e:
+    restore(str(e))
+    f = filehelper.folder_chooser()
+    open("local/files.json", "w").write(json.dumps({
+        "active_folder": f,
+        "active": files["active"],
+        "recent": files["recent"]
+    }))
+    files = json.loads(open("local/files.json").read())
+
 code: str = active
 
 clock = pygame.time.Clock()
@@ -212,11 +225,11 @@ while True:
             keycombo.remove(event.key)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 4 and scroll >= 0: scroll -= 30
-            if event.button == 5: scroll += 30
+            if event.button == 4 and scroll > 0 and pygame.mouse.get_pos()[0] > explorer._w: scroll -= 30
+            if event.button == 5 and pygame.mouse.get_pos()[0] > explorer._w: scroll += 30
 
     events = open("./local/event.dat").read()
-    if events[0] == "1":
+    if str(events[0]) == "\u0001":
         open("local/files.json", "w").write(json.dumps({
             "active_folder": files["active_folder"],
             "active": gui_explorer.clicked_item,
@@ -224,7 +237,12 @@ while True:
         }, indent=4))
         files = json.loads(open("local/files.json").read())
         code = open(gui_explorer.clicked_item).read()
-        open("./local/event.dat", "w").write("0")
+        open("./local/event.dat", "w").write("\0")
+    if str(events[0]) == "\u0002":
+        # folder opened
+        print(events[1])
+        items.insert(int(events[1]), widgets.FileElement(30, "test", explorer))
+        open("./local/event.dat", "w").write("\0")
 
     code = code.replace("\r", "\n")
     l = get_cursor_line(cursor_pos[1], code)
@@ -238,13 +256,13 @@ while True:
         txt = font.render(str(line_num), True, (255, 255, 255) if get_cursor_line(cursor_pos[1], code)==i else (100, 100, 100))
         rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
         screen.blit(txt, rect)
-        screen.blit(font.render(line.replace("\t", "    "), True, (255, 255, 255)), (explorer._w + 70, 20+20*i-scroll))
+        screen.blit(font.render(line.replace("\t", "    ").replace("\0", "\t"), True, (255, 255, 255)), (explorer._w + 70, 20+20*i-scroll))
 
     cursor_line = get_cursor_line(cursor_pos[1], code)
     line = code.split("\n")[cursor_line]
     tab_offset = 3 * line.count("\t") if cursor_pos[0] > -1 else 0
     screen.blit(
-        font.render(" "*(get_cursor_char(cursor_pos[0], line.replace("\t", "    ")) + 1 + tab_offset)+"|", 
+        font.render(" "*(get_cursor_char(cursor_pos[0], line.replace("\t", "    ").replace("\0", "\t")) + 1 + tab_offset)+"|", 
                     True, (127, 127, 127)
     ), (explorer._w + 65, 20+20*cursor_line-scroll))
 
