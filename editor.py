@@ -18,24 +18,55 @@ from gui import widgets
 from sys import platform
 from math import log10, floor
 
-def get_cursor_line(p, t):
+def get_cursor_line(p, t) -> int:
     if p == -1: return len(t.split("\n"))-1
     return p
 
-def get_cursor_char(p, t):
+def get_cursor_char(p, t) -> int:
     if p == -1: return len(t)-1
     return p
 
-def restore(additional_data=""):
+def restore(additional_data="") -> None:
     messagebox.showerror("Error", "An error occured while trying to load your last file.\nTo prevent more errors, we reset:\n- Your active folder cache\n- Your active file cache\n- Your recent folder cache\n\nError: " + additional_data)
     open("local/files.json", "w").write('{\n\t"active_folder": "",\n\t"active": "",\n\t"recent": []\n}')
 
-def save():
+def save() -> None:
     open(files["active"], "w").write(code)
 
-def set_index_in_str(str, index, val):
+def set_index_in_str(str, index, val) -> str:
     return str[0:index]+val+str[index+1:len(str)]
 
+def render_text_colormap(txt: str, colormap: str, font: pygame.font.Font) -> pygame.Surface:
+    colored_text = ""
+    text_blocks = []
+
+    colors = {
+        "a": (255, 0, 0),
+        "b": (0, 255, 0),
+        "c": (0, 0, 255)
+    }
+
+    for color_index, char in enumerate(txt):
+        colored_text += char
+        color = colormap[color_index]
+        next_color = colormap[color_index+1] if color_index < len(colormap)-1 else ""
+
+        if color != next_color:
+            text_blocks.append({
+                "text": colored_text,
+                "color": color
+            })
+            colored_text = ""
+    text_surface = pygame.Surface(font.size(txt))
+    text_surface.set_colorkey((0, 0, 0))
+    offset = 0
+
+    for block in text_blocks:
+        text = font.render(block["text"], True, colors.get(block["color"]))
+        text_surface.blit(text, (offset, 0))
+        offset += font.size(block["text"])[0]
+
+    return text_surface
 
 pygame.init()
 screen: pygame.Surface = pygame.display.set_mode((1280, 720), pygame.RESIZABLE)
@@ -265,6 +296,8 @@ while True:
         font.render(" "*(get_cursor_char(cursor_pos[0], line.replace("\t", "    ").replace("\0", "\t")) + 1 + tab_offset)+"|", 
                     True, (127, 127, 127)
     ), (explorer._w + 65, 20+20*cursor_line-scroll))
+
+    # screen.blit(render_text_colormap("hello", "aabcb", font), (500, 0))
 
     explorer.draw(screen, alt_font)
     for item in items: item.draw(screen, alt_font)
