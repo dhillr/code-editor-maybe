@@ -8,7 +8,7 @@ class Tokenizer:
         self.functions = []
 
     def convert(self, code: str):
-        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ").replace(".", " . ")
+        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ")
     
     def get_strs(self, code: str):
         total = code.split("\"")
@@ -18,19 +18,36 @@ class Tokenizer:
         # for now
         strs = self.get_strs(code)
         if len(code) < 1: return []
-        tokens = self.convert(code).replace("    ", "\t").replace("\n", " ")
+        tokens = self.convert(code).replace("\n", "")
 
         for i in strs:
-            tokens = tokens.replace(i, "\x01")
+            tokens = tokens.replace(i, "\n")
         
         tokens = tokens.split(" ")
-        tokens = [token for token in tokens if token]
+        if tokens[-1] == "": tokens.pop()
+        # tokens = [token for token in tokens if token]
+
+        # merging spaces
+        while "" in tokens:
+            space_index = tokens.index("")
+            i = space_index
+
+            space = ""
+
+            while tokens[i] == "":
+                tokens.pop(i)
+                space += " "
+                if i <= 0: break
+                i -= 1
+                
+            tokens[i] = tokens[i] + space
         
         str_i = 0
         for i, token in enumerate(tokens):
-            if token == "\"\x01\"":
-                tokens[i] = f"\"{strs[str_i]}\""
+            if "\"\n\"" in token:
+                tokens[i] = tokens[i].replace("\"\n\"", f"\"{strs[str_i]}\"")
                 str_i += 1
+        # print(tokens)
 
         return tokens
     
@@ -59,7 +76,7 @@ class Tokenizer:
                                 colormap += "e"*len(token)
                             else:
                                 colormap += " "*len(token)
-            if token != tokens[len(tokens)-1] and token != "" and token != "(" and next_token != "(" or code[len(code)-1] == " ": colormap += " "
+            if i != len(tokens)-1 and token != "" and token != "(" and next_token != "(" and "," not in next_token or code[len(code)-1] == " " and " " not in token: colormap += " "
         return colormap
 
 class PythonTokenizer(Tokenizer):

@@ -53,7 +53,7 @@ def render_text_colormap(txt: str, colormap: str, font: pygame.font.Font) -> pyg
     for color_index, char in enumerate(txt):
         colored_text += char
         color = colormap[color_index]
-        next_color = colormap[color_index+1] if color_index < len(colormap)-1 and color_index < len(txt)-1 else ""
+        next_color = colormap[color_index+1] if color_index < len(txt)-1 and color_index < len(txt)-1 else ""
 
         if color != next_color:
             text_blocks.append({
@@ -289,7 +289,7 @@ while True:
 
     if code != prev_code:
         c = []
-        for line in code.split("\n"): c.append(tokenizer.get_colormap(line.replace("\t", "    ").replace("\0", "\t")))
+        for line in code.split("\n"): c.append(tokenizer.get_colormap(line.replace("\0", "\t")))
     
 
     line_num = len(code.split("\n"))
@@ -322,6 +322,6 @@ while True:
     # if output:
     #     stdout, stderr = output.communicate()
     #     print(stdout)
-    clock.tick(100000)
+    clock.tick(1000000)
     pygame.display.set_caption(f"Code Editor - FPS: {clock.get_fps():.2f} ({'Great' if clock.get_fps() >= 1000 else ('Good' if clock.get_fps() >= 800 else ('Okay' if clock.get_fps() >= 500 else 'Slow'))})")
     pygame.display.flip()
