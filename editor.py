@@ -14,6 +14,7 @@ import gui.widgets as widgets
 import gui.explorer as gui_explorer
 from tkinter import messagebox
 from helper import filehelper
+from helper.tokenizer import *
 from gui import widgets
 from sys import platform
 from math import log10, floor
@@ -41,15 +42,17 @@ def render_text_colormap(txt: str, colormap: str, font: pygame.font.Font) -> pyg
     text_blocks = []
 
     colors = {
-        "a": (255, 0, 0),
-        "b": (0, 255, 0),
-        "c": (0, 0, 255)
+        " ": (255, 255, 255),
+        "a": (195, 135, 190),
+        "b": (220, 220, 175),
+        "c": (216, 141, 109),
+        "d": (184, 204, 169)
     }
 
     for color_index, char in enumerate(txt):
         colored_text += char
         color = colormap[color_index]
-        next_color = colormap[color_index+1] if color_index < len(colormap)-1 else ""
+        next_color = colormap[color_index+1] if color_index < len(colormap)-1 and color_index < len(txt)-1 else ""
 
         if color != next_color:
             text_blocks.append({
@@ -103,6 +106,9 @@ except Exception as e:
     files = json.loads(open("local/files.json").read())
 
 code: str = active
+prev_code: str = ""
+tokenizer = PythonTokenizer(code)
+c = []
 
 clock = pygame.time.Clock()
 elapsed_ms = 0
@@ -276,18 +282,27 @@ while True:
         open("./local/event.dat", "w").write("\0")
 
     code = code.replace("\r", "\n")
+    tokenizer.code = code
     l = get_cursor_line(cursor_pos[1], code)
     tab_level = code.split("\n")[l].count("\t")
+
+    if code != prev_code:
+        c = []
+        for line in code.split("\n"): c.append(tokenizer.get_colormap(line.replace("\t", "    ").replace("\0", "\t")))
+    
 
     line_num = len(code.split("\n"))
     offset = 20 * (floor(log10(line_num)-2) if floor(log10(line_num)-2) > -1 else 0)
     for i, line in enumerate(code.split("\n")):
         # if i > 35: break
+        processed = line.replace("\t", "    ").replace("\0", "\t")
+
         line_num = i+1
         txt = font.render(str(line_num), True, (255, 255, 255) if get_cursor_line(cursor_pos[1], code)==i else (100, 100, 100))
         rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
         screen.blit(txt, rect)
-        screen.blit(font.render(line.replace("\t", "    ").replace("\0", "\t"), True, (255, 255, 255)), (explorer._w + 70, 20+20*i-scroll))
+        # print(len(tokenizer.get_colormap(processed)), len(processed))
+        screen.blit(render_text_colormap(processed, c[i], font), (explorer._w + 70, 20+20*i-scroll))
 
     cursor_line = get_cursor_line(cursor_pos[1], code)
     line = code.split("\n")[cursor_line]
@@ -297,12 +312,11 @@ while True:
                     True, (127, 127, 127)
     ), (explorer._w + 65, 20+20*cursor_line-scroll))
 
-    # screen.blit(render_text_colormap("hello", "aabcb", font), (500, 0))
-
     explorer.draw(screen, alt_font)
     for item in items: item.draw(screen, alt_font)
 
     elapsed_ms = 1000 * (time.time() - start_time)
+    prev_code = code
     
     # if output:
     #     stdout, stderr = output.communicate()
