@@ -46,7 +46,8 @@ def render_text_colormap(txt: str, colormap: str, font: pygame.font.Font) -> pyg
         "a": (195, 135, 190),
         "b": (220, 220, 175),
         "c": (216, 141, 109),
-        "d": (184, 204, 169)
+        "d": (184, 204, 169),
+        "e": (80, 200, 175)
     }
 
     for color_index, char in enumerate(txt):

@@ -8,7 +8,7 @@ class Tokenizer:
         self.functions = []
 
     def convert(self, code: str):
-        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ")
+        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ").replace(".", " . ")
     
     def get_strs(self, code: str):
         total = code.split("\"")
@@ -41,10 +41,11 @@ class Tokenizer:
         for i, token in enumerate(tokens):
             token = token.replace("\t", "    ")
             next_token = tokens[i+1].replace("\t", "    ") if i < len(tokens)-1 else ""
+            prev_token = tokens[i-1].replace("\t", "    ") if i > 0 else ""
             if token.strip() in self.keywords:
                 colormap += "a"*len(token)
             else:
-                if token.strip() in "print":
+                if next_token == "(":
                     colormap += "b"*len(token)
                 else:
                     if "\"" in token:
@@ -54,8 +55,11 @@ class Tokenizer:
                             int(token)
                             colormap += "d"*len(token)
                         except:
-                            colormap += " "*len(token)
-            if token != tokens[len(tokens)-1] and token != "" and token != "(" and next_token != "(": colormap += " "
+                            if "import" in prev_token:
+                                colormap += "e"*len(token)
+                            else:
+                                colormap += " "*len(token)
+            if token != tokens[len(tokens)-1] and token != "" and token != "(" and next_token != "(" or code[len(code)-1] == " ": colormap += " "
         return colormap
 
 class PythonTokenizer(Tokenizer):
