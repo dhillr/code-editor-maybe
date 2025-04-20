@@ -5,14 +5,14 @@ class Tokenizer:
         self.code = code
 
         self.variables = []
-        self.functions = []
+        self.modules = []
 
     def convert(self, code: str):
-        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ")
+        return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ").replace(".", " . ")
     
     def get_strs(self, code: str):
         total = code.split("\"")
-        return [elem for i, elem in enumerate(total) if i & 1]
+        return ["\"" + elem + "\"" for i, elem in enumerate(total) if i & 1]
 
     def tokenize(self, code: str):
         # for now
@@ -44,12 +44,27 @@ class Tokenizer:
         
         str_i = 0
         for i, token in enumerate(tokens):
-            if "\"\n\"" in token:
-                tokens[i] = tokens[i].replace("\"\n\"", f"\"{strs[str_i]}\"")
+            if "\n" in token:
+                tokens[i] = tokens[i].replace("\n", f"{strs[str_i]}")
                 str_i += 1
         # print(tokens)
 
         return tokens
+    
+    def clear_scan(self):
+        self.variables = []
+        self.modules = []
+    
+    def scan(self, code: str):
+        tokens = self.tokenize(code)
+        for i, token in enumerate(tokens):
+            token = token.replace("\t", "    ")
+            next_token = tokens[i+1].replace("\t", "    ") if i < len(tokens)-1 else ""
+            prev_token = tokens[i-1].replace("\t", "    ") if i > 0 else ""
+
+            if next_token.strip() == "=": self.variables.append(token)
+            if prev_token.strip() == "import": self.modules.append(token)
+
     
     def get_colormap(self, code):
         # if not code: code = self.code
@@ -62,7 +77,7 @@ class Tokenizer:
             if token.strip() in self.keywords:
                 colormap += "a"*len(token)
             else:
-                if next_token == "(":
+                if next_token.strip() == "(":
                     colormap += "b"*len(token)
                 else:
                     if "\"" in token:
@@ -72,11 +87,13 @@ class Tokenizer:
                             int(token)
                             colormap += "d"*len(token)
                         except:
-                            if "import" in prev_token:
+                            if token.strip() in self.modules:
                                 colormap += "e"*len(token)
+                            elif token.strip() in self.variables:
+                                colormap += "f"*len(token)
                             else:
                                 colormap += " "*len(token)
-            if i != len(tokens)-1 and token != "" and token != "(" and next_token != "(" and "," not in next_token or code[len(code)-1] == " " and " " not in token: colormap += " "
+            if i != len(tokens)-1 and token != "" and token != "(" and next_token != "(" and "," not in next_token and "." not in next_token and "." not in token or code[len(code)-1] == " " and " " not in token: colormap += " "
         return colormap
 
 class PythonTokenizer(Tokenizer):

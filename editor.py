@@ -47,7 +47,8 @@ def render_text_colormap(txt: str, colormap: str, font: pygame.font.Font) -> pyg
         "b": (220, 220, 175),
         "c": (216, 141, 109),
         "d": (184, 204, 169),
-        "e": (80, 200, 175)
+        "e": (80, 200, 175),
+        "f": (159, 219, 253)
     }
 
     for color_index, char in enumerate(txt):
@@ -263,6 +264,11 @@ while True:
             keycombo.remove(event.key)
 
         if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if event.button < 4:
+                cursor_pos[1] = (mouse_pos[1] - 20) // 20
+                if cursor_pos[1] == len(code.split("\n"))-1: cursor_pos[1] = -1
+                cursor_pos[0] = -1
             if event.button == 4 and scroll > 0 and pygame.mouse.get_pos()[0] > explorer._w: scroll -= 30
             if event.button == 5 and pygame.mouse.get_pos()[0] > explorer._w: scroll += 30
 
@@ -289,7 +295,10 @@ while True:
 
     if code != prev_code:
         c = []
-        for line in code.split("\n"): c.append(tokenizer.get_colormap(line.replace("\0", "\t")))
+        tokenizer.clear_scan()
+        for line in code.split("\n"):
+            tokenizer.scan(line.replace("\0", "\t"))
+            c.append(tokenizer.get_colormap(line.replace("\0", "\t")))
     
 
     line_num = len(code.split("\n"))
@@ -303,15 +312,18 @@ while True:
         rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
         screen.blit(txt, rect)
         # print(len(tokenizer.get_colormap(processed)), len(processed))
+        # print(i, line, tokenizer.tokenize(line))
         screen.blit(render_text_colormap(processed, c[i], font), (explorer._w + 70, 20+20*i-scroll))
 
     cursor_line = get_cursor_line(cursor_pos[1], code)
+    
     line = code.split("\n")[cursor_line]
-    tab_offset = 3 * line.count("\t") if cursor_pos[0] > -1 else 0
+    cursor_char = cursor_pos[0]
+    if cursor_char == -1: cursor_char = len(line)
     screen.blit(
-        font.render(" "*(get_cursor_char(cursor_pos[0], line.replace("\t", "    ").replace("\0", "\t")) + 1 + tab_offset)+"|", 
+        font.render("|", 
                     True, (127, 127, 127)
-    ), (explorer._w + 65, 20+20*cursor_line-scroll))
+    ), (explorer._w + 65 + font.size((" " if cursor_pos[0] != -1 else "")+line[:cursor_char].replace("\t", "    "))[0], 20+20*cursor_line-scroll))
 
     explorer.draw(screen, alt_font)
     for item in items: item.draw(screen, alt_font)
