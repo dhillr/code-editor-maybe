@@ -168,8 +168,8 @@ while True:
                 save()
             elif keycombo == [pygame.K_LCTRL, pygame.K_m]:
                 if platform == "win32":
-                    output = subprocess.Popen(['python', files["active"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    
+                    output = subprocess.Popen(['python', files["active"]])
+                    # output = subprocess.Popen(['python', files["active"]], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 else:
                     os.system(f'python3 "{files["active"]}"')
             elif keycombo == [pygame.K_LCTRL, pygame.K_LSHIFT, pygame.K_p]:
