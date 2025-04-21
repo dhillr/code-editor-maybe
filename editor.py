@@ -89,7 +89,7 @@ if files["active_folder"] == "":
     f = filehelper.folder_chooser()
     open("local/files.json", "w").write(json.dumps({
         "active_folder": f,
-        "active": files["active"],
+        "active": f+"/"+filehelper.first_file(f),
         "recent": files["recent"]
     }))
     files = json.loads(open("local/files.json").read())
@@ -102,7 +102,7 @@ except Exception as e:
     f = filehelper.folder_chooser()
     open("local/files.json", "w").write(json.dumps({
         "active_folder": f,
-        "active": files["active"],
+        "active": f+"/"+filehelper.first_file(f),
         "recent": files["recent"]
     }))
     files = json.loads(open("local/files.json").read())
@@ -265,9 +265,9 @@ while True:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
-            if event.button < 4:
+            if event.button < 4 and mouse_pos[0] > explorer._w:
                 cursor_pos[1] = (mouse_pos[1] - 20) // 20
-                if cursor_pos[1] == len(code.split("\n"))-1: cursor_pos[1] = -1
+                if cursor_pos[1] >= len(code.split("\n"))-1: cursor_pos[1] = -1
                 cursor_pos[0] = -1
             if event.button == 4 and scroll > 0 and pygame.mouse.get_pos()[0] > explorer._w: scroll -= 30
             if event.button == 5 and pygame.mouse.get_pos()[0] > explorer._w: scroll += 30
@@ -304,16 +304,20 @@ while True:
     line_num = len(code.split("\n"))
     offset = 20 * (floor(log10(line_num)-2) if floor(log10(line_num)-2) > -1 else 0)
     for i, line in enumerate(code.split("\n")):
-        # if i > 35: break
-        processed = line.replace("\t", "    ").replace("\0", "\t")
+        if i > scroll // 20 - 10:
+            if i > 35 + scroll // 20: break
+            processed = line.replace("\t", "    ").replace("\0", "\t")
 
-        line_num = i+1
-        txt = font.render(str(line_num), True, (255, 255, 255) if get_cursor_line(cursor_pos[1], code)==i else (100, 100, 100))
-        rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
-        screen.blit(txt, rect)
-        # print(len(tokenizer.get_colormap(processed)), len(processed))
-        # print(i, line, tokenizer.tokenize(line))
-        screen.blit(render_text_colormap(processed, c[i], font), (explorer._w + 70, 20+20*i-scroll))
+            line_num = i+1
+            txt = font.render(str(line_num), True, (255, 255, 255) if get_cursor_line(cursor_pos[1], code)==i else (100, 100, 100))
+            rect = txt.get_rect(topright=(explorer._w + 40 + offset, 20+20*i-scroll))
+            screen.blit(txt, rect)
+            # print(len(tokenizer.get_colormap(processed)), len(processed))
+            # print(i, line, tokenizer.tokenize(line))
+            if str(files["active"]).endswith(".py"):
+                screen.blit(render_text_colormap(processed, c[i], font), (explorer._w + 70, 20+20*i-scroll))
+            else:
+                screen.blit(font.render(processed, True, (255, 255, 255)), (explorer._w + 70, 20+20*i-scroll))
 
     cursor_line = get_cursor_line(cursor_pos[1], code)
     

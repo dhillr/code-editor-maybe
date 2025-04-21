@@ -93,7 +93,11 @@ class Tokenizer:
                                 colormap += "f"*len(token)
                             else:
                                 colormap += " "*len(token)
-            if i != len(tokens)-1 and token != "" and token != "(" and next_token != "(" and "," not in next_token and "." not in next_token and "." not in token or code[len(code)-1] == " " and " " not in token: colormap += " "
+            if i != len(tokens)-1 and token != "" and token != "(" and next_token != "(" \
+            and "," not in next_token and "." not in next_token and "." not in token \
+            or code[len(code)-1] == " " and " " not in token: colormap += " "
+        # print(len(colormap), len(code.replace("\t", "    ")))
+        if len(colormap) < len(code): return " "*len(code)
         return colormap
 
 class PythonTokenizer(Tokenizer):
