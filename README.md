@@ -18,13 +18,15 @@ and click *"Set up"* and wait
 if you do already have it enabled, go to the file you
 just downloaded and
 
-right click it and press *"Share with Linux"*
+go inside the zip and drag the folder in there to the downloads folder
+
+and then right click that folder and press *"Share with Linux"*
 
 now in the linux terminal *(access it by going into the ***terminal*** app)*
 copy these commands:
 
 ```bash
-cd ../mnt/chromeos/MyFiles/Downloads
+cd ../../mnt/chromeos/MyFiles/Downloads
 cd code-editor-maybe-master # or whatever you have it named
 python3 editor.py
 ```
