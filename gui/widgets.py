@@ -1,5 +1,6 @@
 import pygame.draw as draw
 import pygame.mouse as mouse
+from pygame import quit
 from pygame.font import Font
 from helper.gui import Widget, DraggableWidget, Element, Relation, Surface, RightClickMenu
 
@@ -8,7 +9,10 @@ class Explorer(DraggableWidget):
         super().__init__(0, 0, 300, Relation("screen_height"), (10, 5))
         self.menu = None
 
-    def on_option_click(self, option): print(option)
+    def on_option_click(self, option, option_id): 
+        if (option_id == 0):
+            quit()
+            exit()
 
     def destroy_menu(self): self.menu = None
 

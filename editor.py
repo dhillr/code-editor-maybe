@@ -266,7 +266,7 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_pos = pygame.mouse.get_pos()
             if event.button < 4 and mouse_pos[0] > explorer._w:
-                cursor_pos[1] = (mouse_pos[1] - 20) // 20
+                cursor_pos[1] = (mouse_pos[1] - 20) // 20 + scroll // 20
                 if cursor_pos[1] >= len(code.split("\n"))-1: cursor_pos[1] = -1
                 cursor_pos[0] = -1
             if event.button == 4 and scroll > 0 and pygame.mouse.get_pos()[0] > explorer._w: scroll -= 30
@@ -304,8 +304,8 @@ while True:
     line_num = len(code.split("\n"))
     offset = 20 * (floor(log10(line_num)-2) if floor(log10(line_num)-2) > -1 else 0)
     for i, line in enumerate(code.split("\n")):
-        if i > scroll // 20 - 10:
-            if i > 35 + scroll // 20: break
+        if i > (scroll - 10) // 20:
+            if i > screen.get_height() // 20 + scroll // 20: break
             processed = line.replace("\t", "    ").replace("\0", "\t")
 
             line_num = i+1

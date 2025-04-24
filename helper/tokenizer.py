@@ -6,6 +6,7 @@ class Tokenizer:
 
         self.variables = []
         self.modules = []
+        self.classes = []
 
     def convert(self, code: str):
         return code.replace("(", " ( ").replace(")", " ) ").replace(":", " : ").replace(",", " , ").replace(".", " . ")
@@ -62,11 +63,12 @@ class Tokenizer:
             next_token = tokens[i+1].replace("\t", "    ") if i < len(tokens)-1 else ""
             prev_token = tokens[i-1].replace("\t", "    ") if i > 0 else ""
 
-            if next_token.strip() == "=": self.variables.append(token)
+            if next_token.strip() == "=" or prev_token.strip() == "global": self.variables.append(token)
             if prev_token.strip() == "import": self.modules.append(token)
+            if prev_token.strip() == "class": self.classes.append(token)
 
     
-    def get_colormap(self, code):
+    def get_colormap(self, code: str):
         # if not code: code = self.code
         tokens = self.tokenize(code)
         colormap = ""
@@ -77,7 +79,7 @@ class Tokenizer:
             if token.strip() in self.keywords:
                 colormap += "a"*len(token)
             else:
-                if next_token.strip() == "(":
+                if next_token.strip() == "(" and token.strip() not in self.classes:
                     colormap += "b"*len(token)
                 else:
                     if "\"" in token:
@@ -87,7 +89,7 @@ class Tokenizer:
                             int(token)
                             colormap += "d"*len(token)
                         except:
-                            if token.strip() in self.modules:
+                            if token.strip() in self.modules or token.strip() in self.classes:
                                 colormap += "e"*len(token)
                             elif token.strip() in self.variables:
                                 colormap += "f"*len(token)

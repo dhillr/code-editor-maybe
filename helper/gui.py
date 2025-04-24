@@ -129,7 +129,7 @@ class RightClickMenu:
                 if option_rect.collidepoint(mouse_pos):
                     rect(surface, (255, 63, 127), (option_rect[0] + 5, option_rect[1], option_rect[2] - 10, option_rect[3]), border_radius=5)
                     if pygame.mouse.get_pressed()[0]:
-                        self.on_option_click(option)
+                        self.on_option_click(option, i)
                 surface.blit(font.render(option, True, (255, 255, 255)), (self.x + 15, self.y + 5 + padding + 25 * (i + offset)))
             offset += len(group)
             padding += 10
