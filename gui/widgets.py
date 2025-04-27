@@ -1,5 +1,6 @@
 import pygame.draw as draw
 import pygame.mouse as mouse
+from json import loads
 from pygame import quit
 from pygame.font import Font
 from helper.gui import Widget, DraggableWidget, Element, Relation, Surface, RightClickMenu
@@ -11,8 +12,8 @@ class Explorer(DraggableWidget):
 
     def on_option_click(self, option, option_id): 
         if (option_id == 0):
-            quit()
-            exit()
+            files = loads(open("./local/files.json", "r").read())
+            open(files["active_folder"]+"/"+"Untitled-1", "w")
 
     def destroy_menu(self): self.menu = None
 
